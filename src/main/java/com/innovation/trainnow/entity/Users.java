@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -49,7 +50,11 @@ public class Users implements UserDetails {
     @Column(unique = true, nullable = false)
     private String phoneNumber;
     
-    private String otp;
+    private String phoneOtp;
+    
+    private String emailOtp;
+    
+    private LocalDateTime otpExpirationTime;
     
     @Enumerated(EnumType.STRING)
     private Enum.Role role;  
@@ -71,6 +76,8 @@ public class Users implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Payment> payments;
+    
+    private Boolean isVerified;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

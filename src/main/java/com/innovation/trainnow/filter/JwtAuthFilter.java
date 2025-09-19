@@ -15,6 +15,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import com.innovation.trainnow.entity.Users;
+import com.innovation.trainnow.exception.UserNotFoundException;
 import com.innovation.trainnow.repository.UserRepository;
 
 import io.jsonwebtoken.Claims;
@@ -52,7 +53,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String username = jwtService.getUsernameFromToken(token);
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                Users user = userRepository.findByEmail(username);
+                Users user = userRepository.findByEmail(username).orElseThrow(()-> new UserNotFoundException("No user is found with email: "+username));
                 if (user == null) {
                     throw new RuntimeException("User not found");
                 }
