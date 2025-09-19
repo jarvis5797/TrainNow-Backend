@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Data
 public class Users implements UserDetails {
 
 	@Id
@@ -47,7 +49,7 @@ public class Users implements UserDetails {
 
     private String password;
     
-    @Column(unique = true, nullable = false)
+    @Column(unique = true)
     private String phoneNumber;
     
     private String phoneOtp;
@@ -78,6 +80,11 @@ public class Users implements UserDetails {
     private List<Payment> payments;
     
     private Boolean isVerified;
+    
+    private String providerId;
+
+    @Enumerated(EnumType.STRING)
+    private Enum.ProviderType providerType;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

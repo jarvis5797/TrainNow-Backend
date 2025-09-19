@@ -1,6 +1,7 @@
 package com.innovation.trainnow.serviceImpl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -8,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.innovation.trainnow.dto.LoginRequestDto;
 import com.innovation.trainnow.dto.LoginResponseDto;
 import com.innovation.trainnow.dto.SignUpRequestDto;
+import com.innovation.trainnow.entity.Enum;
 import com.innovation.trainnow.entity.Enum.Role;
 import com.innovation.trainnow.entity.Users;
 import com.innovation.trainnow.exception.UserNotFoundException;
@@ -15,6 +17,9 @@ import com.innovation.trainnow.filter.JwtAuthFilter;
 import com.innovation.trainnow.filter.JwtService;
 import com.innovation.trainnow.repository.UserRepository;
 import com.innovation.trainnow.service.AuthService;
+
+import jakarta.transaction.Transactional;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -53,6 +58,7 @@ public class AuthServiceImpl implements AuthService {
 			user.setIsVerified(false);
 			user.setRole(Role.USER);
 		}
+		user.setProviderType(Enum.ProviderType.MANUAL);
 		return userRepository.save(user);
 	}
 
@@ -88,6 +94,41 @@ public class AuthServiceImpl implements AuthService {
 	        throw new RuntimeException("Invalid credentials");
 	    }
 	}
+	@Transactional
+//	http://localhost:8080/oauth2/authorization/google
+    public ResponseEntity<LoginResponseDto> handleOAuth2LoginRequest(OAuth2User oAuth2User, String registrationId) {
+        Enum.ProviderType providerType = jwtService.getProviderTypeFromRegistrationId(registrationId);
+        String providerId = jwtService.determineProviderIdFromOAuth2User(oAuth2User, registrationId);
+        Users user = userRepository.findByProviderIdAndProviderType(providerId, providerType).orElse(null);
+        String email = oAuth2User.getAttribute("email");
+        String name = oAuth2User.getAttribute("name");
+
+        Users emailUser = userRepository.findByEmail(email).orElse(null);
+
+        if(user == null && emailUser == null) {
+            Users newUser = new Users();
+            newUser.setName(name != null ? name : "No Name");
+            newUser.setEmail(email);
+            newUser.setProviderId(providerId);
+            newUser.setProviderType(providerType);
+			newUser.setRole(Role.USER);
+			newUser.setIsVerified(true);
+			user = userRepository.save(newUser);
+        } else if(user != null) {
+            if(email != null && !email.isBlank() && !email.equals(user.getEmail())) {
+                user.setEmail(email);
+                userRepository.save(user);
+            }
+        } else if(emailUser.getEmail().equals(email) && emailUser.getProviderType().equals(Enum.ProviderType.MANUAL)) {
+        	user = emailUser;
+        	
+        }
+        else {
+            throw new BadCredentialsException("This email is already registered with provider "+emailUser.getProviderType());
+        }
+        LoginResponseDto loginResponseDto = new LoginResponseDto(jwtService.generateAccessToken(user), user.getUserId());
+        return ResponseEntity.ok(loginResponseDto);
+    }
 
 
 }

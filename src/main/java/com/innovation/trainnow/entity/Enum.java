@@ -20,5 +20,9 @@ public class Enum {
 	public enum PaymentStatus {
 	    SUCCESS, FAILED, PENDING
 	}
+	
+	public enum ProviderType{
+		GOOGLE,GITHUB,FACEBOOK,MANUAL
+	}
 
 }
