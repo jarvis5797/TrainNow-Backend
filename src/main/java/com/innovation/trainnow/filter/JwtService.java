@@ -6,6 +6,7 @@ import java.util.Date;
 import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import com.innovation.trainnow.entity.Users;
@@ -55,5 +56,42 @@ public class JwtService {
                 .parseSignedClaims(token)
                 .getPayload();
         return claims.getExpiration().before(new Date());
+    }
+    public com.innovation.trainnow.entity.Enum.ProviderType getProviderTypeFromRegistrationId(String registrationId) {
+        return switch (registrationId.toLowerCase()) {
+            case "google" -> com.innovation.trainnow.entity.Enum.ProviderType.GOOGLE;
+            case "github" -> com.innovation.trainnow.entity.Enum.ProviderType.GITHUB;
+            case "facebook" -> com.innovation.trainnow.entity.Enum.ProviderType.FACEBOOK;
+            default -> throw new IllegalArgumentException("Unsupported OAuth2 provider: " + registrationId);
+        };
+    }
+
+
+    public String determineProviderIdFromOAuth2User(OAuth2User oAuth2User, String registrationId) {
+        String providerId = switch (registrationId.toLowerCase()) {
+            case "google" -> oAuth2User.getAttribute("sub");
+            case "github" -> oAuth2User.getAttribute("id").toString();
+
+            default -> {
+                throw new IllegalArgumentException("Unsupported OAuth2 provider: " + registrationId);
+            }
+        };
+
+        if (providerId == null || providerId.isBlank()) {
+            throw new IllegalArgumentException("Unable to determine providerId for OAuth2 login");
+        }
+        return providerId;
+    }
+
+    public String determineUsernameFromOAuth2User(OAuth2User oAuth2User, String registrationId, String providerId) {
+        String email = oAuth2User.getAttribute("email");
+        if (email != null && !email.isBlank()) {
+            return email;
+        }
+        return switch (registrationId.toLowerCase()) {
+            case "google" -> oAuth2User.getAttribute("sub");
+            case "github" -> oAuth2User.getAttribute("login");
+            default -> providerId;
+        };
     }
 }
