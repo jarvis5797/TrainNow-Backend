@@ -10,6 +10,7 @@ import com.innovation.trainnow.dto.LoginResponseDto;
 import com.innovation.trainnow.dto.SignUpRequestDto;
 import com.innovation.trainnow.entity.Enum.Role;
 import com.innovation.trainnow.entity.Users;
+import com.innovation.trainnow.exception.UserNotFoundException;
 import com.innovation.trainnow.filter.JwtAuthFilter;
 import com.innovation.trainnow.filter.JwtService;
 import com.innovation.trainnow.repository.UserRepository;
@@ -39,16 +40,17 @@ public class AuthServiceImpl implements AuthService {
 	public Users signup(SignUpRequestDto signupRequestDto) {
 		Users user = new Users();
 		user.setName(signupRequestDto.getName());
-		if (userRepository.findByEmail(signupRequestDto.getEmail()) != null) {
+		if (userRepository.findByEmail(signupRequestDto.getEmail()).isPresent()) {
 			throw new RuntimeException("Email already exists");
 		}
 		user.setEmail(signupRequestDto.getEmail());
 		user.setPassword(encoder.encode(signupRequestDto.getPassword()));
-		if (userRepository.findByPhoneNumber(signupRequestDto.getPhoneNumber()) != null) {
+		if (userRepository.findByPhoneNumber(signupRequestDto.getPhoneNumber()).isPresent()) {
 			throw new RuntimeException("Phone number already exists");
 		}
 		user.setPhoneNumber(signupRequestDto.getPhoneNumber());
 		if (signupRequestDto.getRole().equals("user")) {
+			user.setIsVerified(false);
 			user.setRole(Role.USER);
 		}
 		return userRepository.save(user);
@@ -61,9 +63,11 @@ public class AuthServiceImpl implements AuthService {
 	        String input = loginRequestDto.getIdentifier(); // Can be email or phone number
 
 	        if (input.contains("@")) {
-	            authUser = userRepository.findByEmail(input);
+	            authUser = userRepository.findByEmail(input)
+	            		.orElseThrow(()-> new UserNotFoundException("No user found with email: " + input));
 	        } else {
-	            authUser = userRepository.findByPhoneNumber(input);
+	            authUser = userRepository.findByPhoneNumber(input)
+	            		.orElseThrow(()-> new UserNotFoundException("No user found with phoneNumber: " + input));
 	        }
 
 	        if (authUser == null) {
