@@ -9,16 +9,19 @@ import java.util.Base64;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
 import com.innovation.trainnow.entity.Users;
 import com.innovation.trainnow.exception.UserNotFoundException;
 import com.innovation.trainnow.repository.UserRepository;
-import com.nimbusds.jose.util.StandardCharset;
 import com.twilio.Twilio;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 @Component
 public class OtpVerificationUtil {
@@ -35,8 +38,25 @@ public class OtpVerificationUtil {
 	@Autowired
 	private UserRepository userRepository;
 	
+	@Autowired
+	private JavaMailSender javaMailSender;
+	
 	
 	private static final SecureRandom secureRandom = new SecureRandom();
+	
+	private void sendOtpToEmail(String email, String otp) {
+		MimeMessage message = javaMailSender.createMimeMessage();
+		try {
+			
+			MimeMessageHelper helper = new MimeMessageHelper(message);
+			helper.setSubject("Otp Verification for TrainNow");
+			helper.setText("Use this verification code to verify your email for TrainNow: "+otp);
+			helper.setTo(email);
+			javaMailSender.send(message);
+		} catch (MessagingException e) {
+			throw new RuntimeException("Error sending mail", e);
+		}
+	}
 
 	private void sendOtpToWhatsapp(String toNumber, String otp) {
 		Twilio.init(accountSid, authToken);
@@ -56,6 +76,7 @@ public class OtpVerificationUtil {
 		String emailOtp = generateOtp();
 		hashAndSaveOtp(phoneOtp, emailOtp, user);
 		sendOtpToWhatsapp(phoneNumber, phoneOtp);
+		sendOtpToEmail(email, emailOtp);
 		return "Otp is sent to email and phone";
 		
 	}
