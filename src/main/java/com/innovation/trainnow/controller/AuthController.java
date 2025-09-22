@@ -38,7 +38,13 @@ public class AuthController {
     }
     
     @PostMapping("/sendOtp")
-    public ResponseEntity<String> sendOtp(@RequestParam String phoneNumber, @RequestParam String email){
-    	return ResponseEntity.ok(otpVerificationUtil.send(phoneNumber , email));
+    public ResponseEntity<String> sendOtp(@RequestParam Long userId){
+    	return ResponseEntity.ok(otpVerificationUtil.send(userId));
     }
+    
+    @PostMapping("/verify")
+    public ResponseEntity<String> sendOtp(@RequestParam Long userId,  @RequestParam String emailOtp, @RequestParam String phoneOtp){
+    	return ResponseEntity.ok(otpVerificationUtil.verifyOtp(userId, emailOtp, phoneOtp));
+    }
+    
 }
