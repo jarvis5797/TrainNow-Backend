@@ -17,6 +17,7 @@ import com.innovation.trainnow.filter.JwtAuthFilter;
 import com.innovation.trainnow.filter.JwtService;
 import com.innovation.trainnow.repository.UserRepository;
 import com.innovation.trainnow.service.AuthService;
+import com.innovation.trainnow.util.OtpVerificationUtil;
 
 import jakarta.transaction.Transactional;
 
@@ -40,26 +41,35 @@ public class AuthServiceImpl implements AuthService {
 
 	@Autowired
 	private JwtService jwtService;
+	
+	@Autowired
+	private OtpVerificationUtil otpVerificationUtil;
 
 	@Override
 	public Users signup(SignUpRequestDto signupRequestDto) {
 		Users user = new Users();
-		user.setName(signupRequestDto.getName());
-		if (userRepository.findByEmail(signupRequestDto.getEmail()).isPresent()) {
-			throw new RuntimeException("Email already exists");
+		try {
+			user.setName(signupRequestDto.getName());
+			if (userRepository.findByEmail(signupRequestDto.getEmail()).isPresent()) {
+				throw new RuntimeException("Email already exists");
+			}
+			user.setEmail(signupRequestDto.getEmail());
+			user.setPassword(encoder.encode(signupRequestDto.getPassword()));
+			if (userRepository.findByPhoneNumber(signupRequestDto.getPhoneNumber()).isPresent()) {
+				throw new RuntimeException("Phone number already exists");
+			}
+			user.setPhoneNumber(signupRequestDto.getPhoneNumber());
+			if (signupRequestDto.getRole().equals("user")) {
+				user.setIsVerified(false);
+				user.setRole(Role.USER);
+			}
+			user.setProviderType(Enum.ProviderType.MANUAL);
+			Users savedUser = userRepository.save(user);
+			otpVerificationUtil.send(savedUser.getUserId());
+			return savedUser;
+		}catch(Exception e) {
+			throw new RuntimeException("Error ocurred with message - "+ e);
 		}
-		user.setEmail(signupRequestDto.getEmail());
-		user.setPassword(encoder.encode(signupRequestDto.getPassword()));
-		if (userRepository.findByPhoneNumber(signupRequestDto.getPhoneNumber()).isPresent()) {
-			throw new RuntimeException("Phone number already exists");
-		}
-		user.setPhoneNumber(signupRequestDto.getPhoneNumber());
-		if (signupRequestDto.getRole().equals("user")) {
-			user.setIsVerified(false);
-			user.setRole(Role.USER);
-		}
-		user.setProviderType(Enum.ProviderType.MANUAL);
-		return userRepository.save(user);
 	}
 
 	@Override
