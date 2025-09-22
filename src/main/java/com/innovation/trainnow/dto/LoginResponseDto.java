@@ -13,5 +13,5 @@ import lombok.Setter;
 @NoArgsConstructor
 public class LoginResponseDto {
 	private String token;
-	private Long id;
+	private UserResponseDto userResponseDto;
 }

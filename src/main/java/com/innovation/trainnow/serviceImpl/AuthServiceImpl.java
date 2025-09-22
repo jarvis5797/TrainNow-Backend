@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.innovation.trainnow.dto.LoginRequestDto;
 import com.innovation.trainnow.dto.LoginResponseDto;
 import com.innovation.trainnow.dto.SignUpRequestDto;
+import com.innovation.trainnow.dto.UserResponseDto;
 import com.innovation.trainnow.entity.Enum;
 import com.innovation.trainnow.entity.Enum.Role;
 import com.innovation.trainnow.entity.Users;
@@ -98,7 +99,8 @@ public class AuthServiceImpl implements AuthService {
 	        );
 
 	        String token = jwtService.generateAccessToken(authUser);
-	        return new LoginResponseDto(token, authUser.getUserId());
+	        UserResponseDto userResponseDto = new UserResponseDto(authUser.getUserId(), authUser.getName(), authUser.getEmail(), authUser.getPhoneNumber(), authUser.getRole().name(), authUser.getWalletBalance(),authUser.getIsVerified(),authUser.getProviderId(),authUser.getProviderType().name());
+	        return new LoginResponseDto(token, userResponseDto);
 
 	    } catch (BadCredentialsException ex) {
 	        throw new RuntimeException("Invalid credentials");
@@ -136,7 +138,7 @@ public class AuthServiceImpl implements AuthService {
         else {
             throw new BadCredentialsException("This email is already registered with provider "+emailUser.getProviderType());
         }
-        LoginResponseDto loginResponseDto = new LoginResponseDto(jwtService.generateAccessToken(user), user.getUserId());
+        LoginResponseDto loginResponseDto = new LoginResponseDto(jwtService.generateAccessToken(user), new UserResponseDto(user.getUserId(), user.getName(), user.getEmail(), user.getPhoneNumber(), user.getRole().name(), user.getWalletBalance(),user.getIsVerified(),user.getProviderId(),user.getProviderType().name()));
         return ResponseEntity.ok(loginResponseDto);
     }
 
