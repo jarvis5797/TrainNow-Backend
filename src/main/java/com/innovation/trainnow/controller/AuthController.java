@@ -33,7 +33,7 @@ public class AuthController {
 	}
 
     @PostMapping("/signup/user")
-    public ResponseEntity<Users> signup(@RequestBody SignUpRequestDto signupRequestDto) {
+    public ResponseEntity<Long> signup(@RequestBody SignUpRequestDto signupRequestDto) {
         return ResponseEntity.ok(authService.signup(signupRequestDto));
     }
     

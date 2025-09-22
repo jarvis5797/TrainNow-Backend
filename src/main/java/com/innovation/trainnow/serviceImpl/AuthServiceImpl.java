@@ -46,7 +46,7 @@ public class AuthServiceImpl implements AuthService {
 	private OtpVerificationUtil otpVerificationUtil;
 
 	@Override
-	public Users signup(SignUpRequestDto signupRequestDto) {
+	public Long signup(SignUpRequestDto signupRequestDto) {
 		Users user = new Users();
 		try {
 			user.setName(signupRequestDto.getName());
@@ -66,7 +66,7 @@ public class AuthServiceImpl implements AuthService {
 			user.setProviderType(Enum.ProviderType.MANUAL);
 			Users savedUser = userRepository.save(user);
 			otpVerificationUtil.send(savedUser.getUserId());
-			return savedUser;
+			return savedUser.getUserId();
 		}catch(Exception e) {
 			throw new RuntimeException("Error ocurred with message - "+ e);
 		}
