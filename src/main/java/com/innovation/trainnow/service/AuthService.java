@@ -7,7 +7,7 @@ import com.innovation.trainnow.entity.Users;
 
 public interface AuthService {
 
-	Users signup(SignUpRequestDto signupRequestDto);
+	Long signup(SignUpRequestDto signupRequestDto);
 
 	LoginResponseDto login(LoginRequestDto loginRequestDto);
 
