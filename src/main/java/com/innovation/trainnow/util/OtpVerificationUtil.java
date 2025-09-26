@@ -55,7 +55,7 @@ public class OtpVerificationUtil {
 		String emailOtp = generateOtp();
 		hashAndSaveOtp(phoneOtp, emailOtp, user);
 		try {
-		sendOtpToWhatsapp(user.getPhoneNumber(), phoneOtp);
+//		sendOtpToWhatsapp(user.getPhoneNumber(), phoneOtp);
 		sendOtpToEmail(user.getEmail(), emailOtp);
 		return "Otp is sent to email and phone";
 		}catch (ApiException e) {
@@ -115,9 +115,9 @@ public class OtpVerificationUtil {
 	
 	public String verifyOtp(Long userId, String emailOtp, String phoneOtp) {
 		Users user = userRepository.findById(userId).orElseThrow(()-> new UserNotFoundException("User not found"));
-		String hashedPhoneOtp = hasher(phoneOtp);
+//		String hashedPhoneOtp = hasher(phoneOtp);
 		String hashedEmailOtp = hasher(emailOtp);
-		if(hashedPhoneOtp.equals(user.getPhoneOtp()) && hashedEmailOtp.equals(user.getEmailOtp())) {
+		if(hashedEmailOtp.equals(user.getEmailOtp())) {
 			user.setIsVerified(true);
 			userRepository.save(user);
 			return "Otp verified";
