@@ -66,7 +66,9 @@ public class AuthServiceImpl implements AuthService {
 			}
 			user.setProviderType(Enum.ProviderType.MANUAL);
 			Users savedUser = userRepository.save(user);
-			otpVerificationUtil.send(savedUser.getUserId());
+			if(savedUser.getRole().equals(Role.USER)) {
+				otpVerificationUtil.send(savedUser.getUserId());
+			}
 			return savedUser.getUserId();
 		}catch(Exception e) {
 			throw new RuntimeException("Error ocurred with message - "+ e);
