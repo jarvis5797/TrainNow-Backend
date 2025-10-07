@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.innovation.trainnow.entity.Booking;
 import com.innovation.trainnow.entity.Enum;
+import com.innovation.trainnow.entity.Enum.Role;
 import com.innovation.trainnow.entity.Gym;
 import com.innovation.trainnow.entity.Payment;
 import com.innovation.trainnow.entity.WalletTransaction;
