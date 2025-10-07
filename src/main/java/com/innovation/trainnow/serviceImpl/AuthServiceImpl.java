@@ -2,8 +2,6 @@ package com.innovation.trainnow.serviceImpl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.innovation.trainnow.dto.LoginRequestDto;
@@ -14,7 +12,6 @@ import com.innovation.trainnow.entity.Enum;
 import com.innovation.trainnow.entity.Enum.Role;
 import com.innovation.trainnow.entity.Users;
 import com.innovation.trainnow.exception.UserNotFoundException;
-import com.innovation.trainnow.filter.JwtAuthFilter;
 import com.innovation.trainnow.filter.JwtService;
 import com.innovation.trainnow.repository.UserRepository;
 import com.innovation.trainnow.service.AuthService;
@@ -61,14 +58,17 @@ public class AuthServiceImpl implements AuthService {
 			}
 			user.setPhoneNumber(signupRequestDto.getPhoneNumber());
 			if (signupRequestDto.getRole().equals("user")) {
-				user.setIsVerified(false);
 				user.setRole(Role.USER);
+			}else if(signupRequestDto.getRole().equals("owner")) {
+				user.setRole(Role.GYM_OWNER);
 			}
 			user.setProviderType(Enum.ProviderType.MANUAL);
+			user.setIsVerified(false);
 			Users savedUser = userRepository.save(user);
 			if(savedUser.getRole().equals(Role.USER)) {
 				otpVerificationUtil.send(savedUser.getUserId());
 			}
+			
 			return savedUser.getUserId();
 		}catch(Exception e) {
 			throw new RuntimeException("Error ocurred with message - "+ e);
